@@ -10,7 +10,12 @@
 #[path = "windows.rs"]
 mod os;
 
-#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd", target_os = "openbsd"))]
+#[cfg(any(
+    target_os = "linux",
+    target_os = "macos",
+    target_os = "freebsd",
+    target_os = "openbsd"
+))]
 #[path = "linux.rs"]
 mod os;
 
@@ -26,7 +31,12 @@ pub enum MacAddressError {
     InternalError,
 }
 
-#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd", target_os = "openbsd"))]
+#[cfg(any(
+    target_os = "linux",
+    target_os = "macos",
+    target_os = "freebsd",
+    target_os = "openbsd"
+))]
 impl From<nix::Error> for MacAddressError {
     fn from(_: nix::Error) -> MacAddressError {
         MacAddressError::InternalError
@@ -100,6 +110,12 @@ pub fn get_mac_address() -> Result<Option<MacAddress>, MacAddressError> {
     let bytes = os::get_mac(None)?;
 
     Ok(bytes.map(|b| MacAddress { bytes: b }))
+}
+
+/// Calls the OS-specific function for retrieving list of MAC address of all network devices, ignoring local-loopback.
+pub fn get_mac_addresses() -> Result<Vec<MacAddress>, MacAddressError> {
+    let mac_list = os::get_mac_list()?;
+    Ok(mac_list.iter().map(|b| MacAddress { bytes: *b }).collect())
 }
 
 /// Attempts to look up the MAC address of an interface via the specified name.
@@ -267,5 +283,12 @@ mod tests {
             let mac2 = mac_address_by_name(&name).unwrap().unwrap();
             assert_eq!(mac, mac2);
         }
+    }
+
+    #[test]
+    fn test_api_sanity() {
+        let addrs = get_mac_addresses();
+        assert!(addrs.is_ok());
+        println!("{:?}", addrs);
     }
 }
