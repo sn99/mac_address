@@ -46,6 +46,37 @@ pub fn get_mac(name: Option<&str>) -> Result<Option<[u8; 6]>, MacAddressError> {
     Ok(None)
 }
 
+/// Uses bindings to the `Iphlpapi.h` Windows header to fetch the interface devices
+/// list with [GetAdaptersAddresses][https://msdn.microsoft.com/en-us/library/windows/desktop/aa365915(v=vs.85).aspx]
+/// then loops over the returned list and filters network devices with a MAC address.
+///
+/// If it fails to find a device, it returns a `NoDevicesFound` error.
+pub fn get_mac_list() -> Result<Vec<[u8; 6]>, MacAddressError> {
+    let mut adapters = get_adapters()?;
+    // Pointer to the current location in the linked list
+    let mut ptr = adapters.as_mut_ptr() as PIP_ADAPTER_ADDRESSES;
+
+    let mut result = vec![];
+
+    loop {
+        // Break if we've gone through all devices
+        if ptr.is_null() {
+            break;
+        }
+
+        let bytes = unsafe { convert_mac_bytes(ptr) };
+
+        if bytes.iter().any(|&x| x != 0) {
+            result.push(bytes);
+        }
+
+        // Otherwise go to the next device
+        ptr = unsafe { (*ptr).Next };
+    }
+
+    Ok(result)
+}
+
 pub fn get_ifname(mac: &[u8; 6]) -> Result<Option<String>, MacAddressError> {
     let mut adapters = get_adapters()?;
     // Pointer to the current location in the linked list
