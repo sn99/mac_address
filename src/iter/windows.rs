@@ -13,7 +13,9 @@ impl MacAddressIterator {
     /// Creates a new `MacAddressIterator`.
     pub fn new() -> Result<MacAddressIterator, MacAddressError> {
         let mut adapters = os::get_adapters()?;
-        let ptr = adapters.as_mut_ptr() as *mut IP_ADAPTER_ADDRESSES_LH;
+        let ptr = adapters
+            .as_mut_ptr()
+            .cast::<windows::Win32::NetworkManagement::IpHelper::IP_ADAPTER_ADDRESSES_LH>();
 
         Ok(Self {
             _buffer: adapters,

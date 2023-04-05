@@ -11,7 +11,7 @@ use crate::MacAddressError;
 const GAA_FLAG_NONE: GET_ADAPTERS_ADDRESSES_FLAGS = GET_ADAPTERS_ADDRESSES_FLAGS(0x0000);
 
 /// Uses bindings to the `Iphlpapi.h` Windows header to fetch the interface devices
-/// list with [GetAdaptersAddresses][https://msdn.microsoft.com/en-us/library/windows/desktop/aa365915(v=vs.85).aspx]
+/// list with [`GetAdaptersAddresses`][https://msdn.microsoft.com/en-us/library/windows/desktop/aa365915(v=vs.85).aspx]
 /// then loops over the returned list until it finds a network device with a MAC address,
 /// and returns it.
 ///
@@ -19,7 +19,9 @@ const GAA_FLAG_NONE: GET_ADAPTERS_ADDRESSES_FLAGS = GET_ADAPTERS_ADDRESSES_FLAGS
 pub fn get_mac(name: Option<&str>) -> Result<Option<[u8; 6]>, MacAddressError> {
     let mut adapters = get_adapters()?;
     // Pointer to the current location in the linked list
-    let mut ptr = adapters.as_mut_ptr() as *mut IP_ADAPTER_ADDRESSES_LH;
+    let mut ptr = adapters
+        .as_mut_ptr()
+        .cast::<windows::Win32::NetworkManagement::IpHelper::IP_ADAPTER_ADDRESSES_LH>();
 
     loop {
         // Break if we've gone through all devices
@@ -47,14 +49,16 @@ pub fn get_mac(name: Option<&str>) -> Result<Option<[u8; 6]>, MacAddressError> {
 }
 
 /// Uses bindings to the `Iphlpapi.h` Windows header to fetch the interface devices
-/// list with [GetAdaptersAddresses][https://msdn.microsoft.com/en-us/library/windows/desktop/aa365915(v=vs.85).aspx]
+/// list with [`GetAdaptersAddresses`][https://msdn.microsoft.com/en-us/library/windows/desktop/aa365915(v=vs.85).aspx]
 /// then loops over the returned list and filters network devices with a MAC address.
 ///
 /// If it fails to find a device, it returns a `NoDevicesFound` error.
 pub fn get_mac_list() -> Result<Vec<[u8; 6]>, MacAddressError> {
     let mut adapters = get_adapters()?;
     // Pointer to the current location in the linked list
-    let mut ptr = adapters.as_mut_ptr() as *mut IP_ADAPTER_ADDRESSES_LH;
+    let mut ptr = adapters
+        .as_mut_ptr()
+        .cast::<windows::Win32::NetworkManagement::IpHelper::IP_ADAPTER_ADDRESSES_LH>();
 
     let mut result = vec![];
 
@@ -80,7 +84,9 @@ pub fn get_mac_list() -> Result<Vec<[u8; 6]>, MacAddressError> {
 pub fn get_ifname(mac: &[u8; 6]) -> Result<Option<String>, MacAddressError> {
     let mut adapters = get_adapters()?;
     // Pointer to the current location in the linked list
-    let mut ptr = adapters.as_mut_ptr() as *mut IP_ADAPTER_ADDRESSES_LH;
+    let mut ptr = adapters
+        .as_mut_ptr()
+        .cast::<windows::Win32::NetworkManagement::IpHelper::IP_ADAPTER_ADDRESSES_LH>();
 
     loop {
         // Break if we've gone through all devices
@@ -115,24 +121,30 @@ pub(crate) fn get_adapters() -> Result<Vec<u8>, MacAddressError> {
 
     // This will get the number of bytes we need to allocate for all devices
     unsafe {
-        GetAdaptersAddresses(AF_UNSPEC.0 as u32, GAA_FLAG_NONE, None, None, &mut buf_len);
+        GetAdaptersAddresses(
+            u32::from(AF_UNSPEC.0),
+            GAA_FLAG_NONE,
+            None,
+            None,
+            &mut buf_len,
+        );
     }
 
     // Allocate `buf_len` bytes, and create a raw pointer to it
     let mut adapters_list = vec![0u8; buf_len as usize];
-    let adapter_addresses: *mut IP_ADAPTER_ADDRESSES_LH = adapters_list.as_mut_ptr() as *mut _;
+    let adapter_addresses: *mut IP_ADAPTER_ADDRESSES_LH = adapters_list.as_mut_ptr().cast();
 
     // Get our list of adapters
     let result = unsafe {
         GetAdaptersAddresses(
             // [IN] Family
-            AF_UNSPEC.0 as u32,
+            u32::from(AF_UNSPEC.0),
             // [IN] Flags
             GAA_FLAG_NONE,
             // [IN] Reserved
             None,
             // [INOUT] AdapterAddresses
-            Some(adapter_addresses as *mut _),
+            Some(adapter_addresses.cast()),
             // [INOUT] SizePointer
             &mut buf_len,
         )

@@ -2,7 +2,7 @@
 //! network hardware. See [the Wikipedia
 //! entry](https://en.wikipedia.org/wiki/MAC_address) for more information.
 //!
-//! Supported platforms: Linux, Windows, MacOS, FreeBSD
+//! Supported platforms: Linux, Windows, `MacOS`, FreeBSD
 
 #![deny(missing_docs)]
 
@@ -83,6 +83,7 @@ pub struct MacAddress {
 
 impl MacAddress {
     /// Creates a new `MacAddress` struct from the given bytes.
+    #[must_use]
     pub fn new(bytes: [u8; 6]) -> MacAddress {
         MacAddress { bytes }
     }
@@ -134,6 +135,7 @@ pub fn name_by_mac_address(mac: &MacAddress) -> Result<Option<String>, MacAddres
 
 impl MacAddress {
     /// Returns the array of MAC address bytes.
+    #[must_use]
     pub fn bytes(self) -> [u8; 6] {
         self.bytes
     }
@@ -206,7 +208,7 @@ mod tests {
         let string = "80:FA:5B:41:10:6B";
         let address = string.parse::<MacAddress>().unwrap();
         assert_eq!(address.bytes(), [128, 250, 91, 65, 16, 107]);
-        assert_eq!(&format!("{}", address), string);
+        assert_eq!(&format!("{address}"), string);
     }
 
     #[test]
@@ -214,7 +216,7 @@ mod tests {
         let string = "01-23-45-67-89-AB";
         let address = string.parse::<MacAddress>().unwrap();
         assert_eq!(address.bytes(), [0x01, 0x23, 0x45, 0x67, 0x89, 0xAB]);
-        assert_eq!(format!("{}", address), string.replace('-', ":"));
+        assert_eq!(format!("{address}"), string.replace('-', ":"));
     }
 
     #[test]
@@ -289,6 +291,6 @@ mod tests {
     fn test_api_sanity() {
         let addrs = get_mac_addresses();
         assert!(addrs.is_ok());
-        println!("{:?}", addrs);
+        println!("{addrs:?}");
     }
 }

@@ -15,10 +15,10 @@ fn main() {
 
     match mac_address_by_name(name) {
         Ok(Some(ma)) => {
-            println!("MAC addr of {} = {}", name, ma);
+            println!("MAC addr of {name} = {ma}");
             println!("bytes = {:?}", ma.bytes());
         }
-        Ok(None) => println!("Interface \"{}\" not found", name),
-        Err(e) => println!("{:?}", e),
+        Ok(None) => println!("Interface \"{name}\" not found"),
+        Err(e) => println!("{e:?}"),
     }
 }
