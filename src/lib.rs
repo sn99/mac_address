@@ -164,7 +164,7 @@ impl std::str::FromStr for MacAddress {
     }
 }
 
-impl std::convert::TryFrom<&'_ str> for MacAddress {
+impl TryFrom<&'_ str> for MacAddress {
     type Error = MacParseError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
@@ -172,7 +172,7 @@ impl std::convert::TryFrom<&'_ str> for MacAddress {
     }
 }
 
-impl std::convert::TryFrom<std::borrow::Cow<'_, str>> for MacAddress {
+impl TryFrom<std::borrow::Cow<'_, str>> for MacAddress {
     type Error = MacParseError;
 
     fn try_from(value: std::borrow::Cow<'_, str>) -> Result<Self, Self::Error> {
@@ -214,7 +214,7 @@ mod tests {
         let string = "01-23-45-67-89-AB";
         let address = string.parse::<MacAddress>().unwrap();
         assert_eq!(address.bytes(), [0x01, 0x23, 0x45, 0x67, 0x89, 0xAB]);
-        assert_eq!(format!("{}", address), string.replace("-", ":"));
+        assert_eq!(format!("{}", address), string.replace('-', ":"));
     }
 
     #[test]
