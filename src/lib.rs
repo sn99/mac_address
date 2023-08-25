@@ -10,11 +10,18 @@
 #[path = "windows.rs"]
 mod os;
 
-#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd", target_os = "openbsd"))]
+#[cfg(any(
+    target_os = "linux",
+    target_os = "macos",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "android"
+))]
 #[path = "linux.rs"]
 mod os;
 
 mod iter;
+
 pub use iter::MacAddressIterator;
 
 /// Possible errors when attempting to retrieve a MAC address.
@@ -26,7 +33,13 @@ pub enum MacAddressError {
     InternalError,
 }
 
-#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd", target_os = "openbsd"))]
+#[cfg(any(
+    target_os = "linux",
+    target_os = "macos",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "android"
+))]
 impl From<nix::Error> for MacAddressError {
     fn from(_: nix::Error) -> MacAddressError {
         MacAddressError::InternalError
